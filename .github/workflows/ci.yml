@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build & Test
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        go: ['1.24', '1.25']
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: gcp-emulator
+
+      - name: Checkout sibling repos
+        run: |
+          git clone https://github.com/blackwell-systems/gcp-iam-emulator
+          git clone https://github.com/blackwell-systems/gcp-secret-manager-emulator
+          git clone https://github.com/blackwell-systems/gcp-eventarc-emulator
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: ${{ matrix.go }}
+          cache-dependency-path: gcp-emulator/go.sum
+
+      - name: Build
+        working-directory: gcp-emulator
+        run: go build ./...
+
+      - name: Test
+        working-directory: gcp-emulator
+        run: go test ./...
+
+      - name: Vet
+        working-directory: gcp-emulator
+        run: go vet ./...
+
+  format:
+    name: Format Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: '1.24'
+
+      - name: Check formatting
+        run: |
+          unformatted=$(find . -name '*.go' | xargs gofmt -l)
+          if [ -n "$unformatted" ]; then
+            echo "Unformatted files:"
+            echo "$unformatted"
+            exit 1
+          fi

@@ -1,17 +1,18 @@
+# Build context must be the parent directory of all emulator repos.
+# docker build -f gcp-emulator/Dockerfile -t gcp-emulator .
+#
+# In CI, the release workflow checks out all sibling repos and sets
+# the build context to the parent directory automatically.
+
 FROM golang:1.24-alpine AS builder
 
-WORKDIR /build
+WORKDIR /build/gcp-emulator
 
-# Copy dependency files for all modules
-COPY go.mod go.sum ./
-
-# Copy local module sources (replace directives point here)
-COPY ../gcp-iam-emulator /gcp-iam-emulator
-COPY ../gcp-secret-manager-emulator /gcp-secret-manager-emulator
-COPY ../gcp-eventarc-emulator /gcp-eventarc-emulator
-
-# Copy gcp-emulator source
-COPY . .
+# Copy all module sources (paths relative to parent-dir build context)
+COPY gcp-iam-emulator/             /build/gcp-iam-emulator/
+COPY gcp-secret-manager-emulator/  /build/gcp-secret-manager-emulator/
+COPY gcp-eventarc-emulator/        /build/gcp-eventarc-emulator/
+COPY gcp-emulator/                 /build/gcp-emulator/
 
 RUN go mod download && \
     CGO_ENABLED=0 GOOS=linux go build -o gcp-emulator ./cmd/gcp-emulator
@@ -22,7 +23,7 @@ RUN apk add --no-cache ca-certificates && update-ca-certificates && \
     addgroup -S gcpmock && adduser -S gcpmock -G gcpmock
 
 WORKDIR /app
-COPY --from=builder /build/gcp-emulator .
+COPY --from=builder /build/gcp-emulator/gcp-emulator .
 
 USER gcpmock
 
