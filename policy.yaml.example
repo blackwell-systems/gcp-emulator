@@ -1,0 +1,58 @@
+# GCP Emulator — Example IAM Policy
+#
+# Copy this file to policy.yaml and customize for your project.
+# Start with: gcp-emulator --policy policy.yaml --iam-mode strict
+
+# Custom role definitions (subset of GCP built-in roles)
+roles:
+  roles/secretmanager.secretAccessor:
+    permissions:
+      - secretmanager.versions.access
+
+  roles/secretmanager.admin:
+    permissions:
+      - secretmanager.secrets.create
+      - secretmanager.secrets.delete
+      - secretmanager.secrets.get
+      - secretmanager.secrets.list
+      - secretmanager.secrets.update
+      - secretmanager.versions.access
+      - secretmanager.versions.add
+      - secretmanager.versions.destroy
+      - secretmanager.versions.get
+      - secretmanager.versions.list
+
+  roles/eventarc.admin:
+    permissions:
+      - eventarc.triggers.create
+      - eventarc.triggers.delete
+      - eventarc.triggers.get
+      - eventarc.triggers.list
+      - eventarc.triggers.update
+      - eventarc.channels.create
+      - eventarc.channels.delete
+      - eventarc.channels.get
+      - eventarc.channels.list
+
+  roles/eventarc.eventReceiver:
+    permissions:
+      - eventarc.events.receiveAuditLogWritten
+      - eventarc.events.receiveEvents
+
+# Group definitions (optional)
+# groups:
+#   developers:
+#     members:
+#       - user:alice@example.com
+
+# Project bindings
+projects:
+  my-project:
+    bindings:
+      - role: roles/secretmanager.admin
+        members:
+          - serviceAccount:app@my-project.iam.gserviceaccount.com
+
+      - role: roles/eventarc.admin
+        members:
+          - serviceAccount:app@my-project.iam.gserviceaccount.com

@@ -1,0 +1,16 @@
+services:
+  gcp-emulator:
+    build: .
+    ports:
+      - "9090:9090"   # gRPC — Secret Manager, Eventarc, IAM
+      - "8090:8090"   # REST — unified gateway
+    environment:
+      IAM_MODE: "${IAM_MODE:-off}"
+      GCP_EMULATOR_POLICY_FILE: "${GCP_EMULATOR_POLICY_FILE:-}"
+    volumes:
+      - "${POLICY_FILE:-./policy.yaml.example}:/policy.yaml:ro"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8090/healthz"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
