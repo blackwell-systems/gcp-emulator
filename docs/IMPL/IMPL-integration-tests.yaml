@@ -1,0 +1,532 @@
+title: gcp-emulator Integration Tests
+feature_slug: integration-tests
+verdict: SUITABLE
+suitability_assessment: |
+    1. File decomposition: 4 new test files with disjoint ownership across 3 agents.
+       Agent A creates the shared test helper and gRPC tests in wave 1. Agents B
+       and C create REST and smoke tests in wave 2 after the helper is available.
+    2. No investigation needed - all services are already wired in main.go and the
+       public APIs (Register, NewGatewayHandler) are documented. Test patterns are
+       well-established from the reference gcp-eventarc-emulator/integration_test.go.
+    3. Interface discoverability: The cross-agent interface is the shared test
+       helper (setupEmulator, dialEmulator, startGateway) defined in testhelper_test.go.
+       Fully specifiable before implementation.
+    4. No tests exist yet - all files are new (TODO).
+    5. Parallelization value: 2 agents run in parallel in wave 2 after wave 1
+       establishes the helper. Go test cycle ~10s. Coordination value is high -
+       the IMPL doc serves as a comprehensive test plan ensuring coverage across
+       all four services, health endpoints, error handling, and cross-service
+       coexistence.
+
+    Estimated times:
+    - Scout phase: ~8 min
+    - Agent execution: ~12 min (wave 1: 1 agent x 8 min, wave 2: 2 agents x 5 min parallel)
+    - Merge and verification: ~4 min
+    Total SAW time: ~24 min
+
+    Sequential baseline: ~25 min (3 agents x 8 min avg sequential)
+    Time savings: ~1 min (4% faster)
+
+    Recommendation: Marginal speed gains but strong coordination value as a test
+    plan and coverage tracker. Proceed as SUITABLE.
+test_command: go test -count=1 ./...
+lint_command: go vet ./...
+file_ownership:
+    - file: testhelper_test.go
+      agent: A
+      wave: 1
+      action: new
+    - file: integration_test.go
+      agent: A
+      wave: 1
+      action: new
+    - file: rest_integration_test.go
+      agent: B
+      wave: 2
+      action: new
+    - file: smoke_test.go
+      agent: C
+      wave: 2
+      action: new
+interface_contracts:
+    - name: setupEmulator
+      description: |
+        Creates an in-process gRPC server with all four emulator services registered.
+        Used by all test files across both waves.
+      definition: |
+        func setupEmulator(t *testing.T) (lis *bufconn.Listener, grpcAddr string, cleanup func())
+
+        Implementation details:
+        - Creates bufconn.Listen(1024 * 1024) for in-process gRPC testing
+        - Creates grpc.NewServer()
+        - Sets os.Setenv("IAM_MODE", "off") to disable IAM enforcement
+        - Calls iam.Register(grpcSrv) with no options
+        - Calls sm.Register(grpcSrv)
+        - Calls kms.Register(grpcSrv)
+        - Calls eventarc.Register(grpcSrv)
+        - Starts grpcSrv.Serve(lis) in a goroutine
+        - ALSO starts a real TCP listener on "localhost:0" and serves the same
+          grpcSrv on it (needed for REST gateway which dials a real TCP address).
+          Use net.Listen("tcp", "localhost:0") to get a free port, then serve in goroutine.
+        - Returns: lis (for bufconn gRPC tests), real TCP addr string (for gateway),
+          and cleanup func that calls grpcSrv.Stop() and closes both listeners
+      location: testhelper_test.go
+    - name: dialEmulator
+      description: |
+        Creates a gRPC client connection over the bufconn listener.
+      definition: |
+        func dialEmulator(t *testing.T, lis *bufconn.Listener) *grpc.ClientConn
+
+        Implementation:
+        - grpc.NewClient("passthrough://bufnet", grpc.WithContextDialer(...), insecure)
+        - Registers t.Cleanup(conn.Close)
+        - Returns conn
+      location: testhelper_test.go
+    - name: startGateway
+      description: |
+        Starts the unified REST gateway against the real TCP gRPC address.
+      definition: |
+        func startGateway(t *testing.T, grpcAddr string) string
+
+        Implementation:
+        - Calls gateway.New(grpcAddr)
+        - Creates httptest.NewServer(gw) wrapping the Gateway as http.Handler
+        - Registers t.Cleanup(ts.Close)
+        - Returns ts.URL (the gateway base URL for HTTP requests)
+      location: testhelper_test.go
+waves:
+    - number: 1
+      agents:
+        - id: A
+          task: |
+            ## Test Helper + gRPC Integration Tests
+
+            Create two files in the repo root, both with package gcpemulator_test.
+
+            ### File 1: testhelper_test.go — shared test infrastructure
+
+            This file provides three helper functions used by all test files.
+
+            **Imports needed:**
+            ```go
+            import (
+                "context"
+                "net"
+                "os"
+                "testing"
+
+                "google.golang.org/grpc"
+                "google.golang.org/grpc/credentials/insecure"
+                "google.golang.org/grpc/test/bufconn"
+
+                eventarc "github.com/blackwell-systems/gcp-eventarc-emulator"
+                iam "github.com/blackwell-systems/gcp-iam-emulator"
+                kms "github.com/blackwell-systems/gcp-kms-emulator"
+                sm "github.com/blackwell-systems/gcp-secret-manager-emulator"
+
+                "github.com/blackwell-systems/gcp-emulator/internal/gateway"
+
+                "net/http/httptest"
+            )
+            ```
+
+            **func setupEmulator(t *testing.T) (*bufconn.Listener, string, func())**
+            - Create bufconn.Listen(1024 * 1024)
+            - Create grpc.NewServer()
+            - os.Setenv("IAM_MODE", "off")
+            - Register all 4 services: iam.Register(grpcSrv), sm.Register(grpcSrv),
+              kms.Register(grpcSrv), eventarc.Register(grpcSrv)
+            - Fatal on any Register error
+            - Start grpcSrv.Serve(lis) in goroutine for bufconn
+            - Also: net.Listen("tcp", "localhost:0") for a real TCP listener, then
+              start a second goroutine: grpcSrv.Serve(tcpLis). This gives the REST
+              gateway a real address to dial. Extract the addr via tcpLis.Addr().String()
+            - Return (bufconnLis, tcpAddr, cleanup) where cleanup stops the server
+              and closes both listeners
+
+            **func dialEmulator(t *testing.T, lis *bufconn.Listener) *grpc.ClientConn**
+            - grpc.NewClient("passthrough://bufnet",
+                grpc.WithContextDialer(func(ctx context.Context, _ string) (net.Conn, error) {
+                    return lis.DialContext(ctx)
+                }),
+                grpc.WithTransportCredentials(insecure.NewCredentials()))
+            - t.Cleanup(conn.Close)
+            - Return conn
+
+            **func startGateway(t *testing.T, grpcAddr string) string**
+            - gw, err := gateway.New(grpcAddr) — fatal on error
+            - ts := httptest.NewServer(gw)
+            - t.Cleanup(ts.Close)
+            - Return ts.URL
+
+            ### File 2: integration_test.go — gRPC integration tests
+
+            **Imports needed:**
+            ```go
+            import (
+                "context"
+                "testing"
+
+                secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+                kmspb "cloud.google.com/go/kms/apiv1/kmspb"
+                eventarcpb "cloud.google.com/go/eventarc/apiv1/eventarcpb"
+                longrunningpb "cloud.google.com/go/longrunning/autogen/longrunningpb"
+                iampb "google.golang.org/genproto/googleapis/iam/v1"
+                "google.golang.org/grpc/codes"
+                "google.golang.org/grpc/status"
+            )
+            ```
+
+            **Local helper — unpackTrigger(t, op):**
+            ```go
+            func unpackTrigger(t *testing.T, op *longrunningpb.Operation) *eventarcpb.Trigger {
+                t.Helper()
+                if !op.Done { t.Fatal("expected operation to be DONE") }
+                var trigger eventarcpb.Trigger
+                if err := op.GetResponse().UnmarshalTo(&trigger); err != nil {
+                    t.Fatalf("UnmarshalTo(Trigger) error: %v", err)
+                }
+                return &trigger
+            }
+            ```
+
+            **TestGRPC_SecretManager** with subtests:
+            - Setup: lis, _, cleanup := setupEmulator(t); conn := dialEmulator(t, lis)
+            - client := secretmanagerpb.NewSecretManagerServiceClient(conn)
+            - "Create": CreateSecret(parent="projects/test-project", secretId="test-secret",
+              secret with Replication.Automatic). Verify name = "projects/test-project/secrets/test-secret"
+            - "Get": GetSecret by name, verify name matches
+            - "List": ListSecrets(parent), verify at least 1 secret returned
+            - "AddVersion": AddSecretVersion(parent=secret name, payload data=[]byte("my-secret-data"))
+              Verify version name contains "/versions/"
+            - "AccessVersion": AccessSecretVersion(name=version name from AddVersion)
+              Verify payload.data = []byte("my-secret-data")
+
+            **TestGRPC_KMS** with subtests:
+            - Setup: lis, _, cleanup := setupEmulator(t); conn := dialEmulator(t, lis)
+            - client := kmspb.NewKeyManagementServiceClient(conn)
+            - parent := "projects/test-project/locations/us-central1"
+            - "CreateKeyRing": CreateKeyRing(parent, keyRingId="test-ring")
+              Verify name = parent + "/keyRings/test-ring"
+            - "CreateCryptoKey": CreateCryptoKey(parent=keyRing name, cryptoKeyId="test-key",
+              purpose=ENCRYPT_DECRYPT). Verify name contains "/cryptoKeys/test-key"
+            - "Encrypt": Encrypt(name=cryptoKey name, plaintext=[]byte("hello world"))
+              Store ciphertext. Verify ciphertext is non-empty.
+            - "Decrypt": Decrypt(name=cryptoKey name, ciphertext from Encrypt)
+              Verify plaintext = []byte("hello world")
+            - "ListCryptoKeys": ListCryptoKeys(parent=keyRing name)
+              Verify our key appears in the list
+            - "DestroyCryptoKeyVersion": DestroyCryptoKeyVersion(name=cryptoKey name + "/cryptoKeyVersions/1")
+              Verify state is DESTROY_SCHEDULED
+
+            **TestGRPC_Eventarc** with subtests:
+            - Setup: lis, _, cleanup := setupEmulator(t); conn := dialEmulator(t, lis)
+            - client := eventarcpb.NewEventarcClient(conn)
+            - parent := "projects/test-project/locations/us-central1"
+            - "CreateTrigger": CreateTrigger(parent, triggerId="test-trigger", trigger with
+              EventFilters=[{attribute:"type", value:"test.v1"}],
+              Destination.HttpEndpoint.Uri="http://localhost:8080/test")
+              Unpack LRO, verify trigger name = parent + "/triggers/test-trigger"
+            - "GetTrigger": GetTrigger(name), verify name matches
+            - "ListTriggers": ListTriggers(parent), verify trigger appears
+
+            **TestGRPC_IAM** with subtests:
+            - Setup: lis, _, cleanup := setupEmulator(t); conn := dialEmulator(t, lis)
+            - client := iampb.NewIAMPolicyClient(conn)
+            - resource := "projects/test-project"
+            - "SetPolicy": SetIamPolicy(resource, policy with Bindings=[{Role:"roles/viewer",
+              Members:["user:test@example.com"]}]). Verify no error.
+            - "GetPolicy": GetIamPolicy(resource). Verify at least 1 binding with role "roles/viewer"
+            - "TestPermissions": TestIamPermissions(resource, permissions=["secretmanager.secrets.get"])
+              Verify no error (response permissions may be empty with IAM mode off)
+
+            **TestGRPC_CrossService**:
+            - Single setupEmulator + dialEmulator connection
+            - Create all 4 clients from same conn
+            - Call ListSecrets, ListKeyRings, ListTriggers, GetIamPolicy
+            - Verify all return without error
+
+            **TestGRPC_NotFound** with subtests:
+            - "Secret": GetSecret("projects/test-project/secrets/nonexistent"), expect codes.NotFound
+            - "CryptoKey": GetCryptoKey("projects/test-project/locations/us-central1/keyRings/x/cryptoKeys/y"),
+              expect codes.NotFound
+            - "Trigger": GetTrigger("projects/test-project/locations/us-central1/triggers/nonexistent"),
+              expect codes.NotFound
+
+            **TestGRPC_AlreadyExists** with subtests:
+            - "Secret": Create secret "dup-secret", create again, expect codes.AlreadyExists
+            - "KeyRing": Create keyring "dup-ring", create again, expect codes.AlreadyExists
+
+            **TestGRPC_InvalidArgument** with subtests:
+            - "Secret": CreateSecret with empty parent, expect codes.InvalidArgument
+            - "KeyRing": CreateKeyRing with empty parent, expect codes.InvalidArgument
+            - "Trigger": CreateTrigger with empty parent, expect codes.InvalidArgument
+
+            ### Verification gate
+            ```
+            go test -v -run "TestGRPC" -count=1 .
+            ```
+
+            ### Constraints
+            - Package: gcpemulator_test (external test package)
+            - Use t.Run subtests, t.Helper(), t.Cleanup()
+            - Do NOT use t.Parallel() (env var conflicts)
+            - Follow patterns from gcp-eventarc-emulator/integration_test.go
+          files:
+            - testhelper_test.go
+            - integration_test.go
+          context_source: prepared-brief
+    - number: 2
+      agents:
+        - id: B
+          task: |
+            ## REST Integration Tests (rest_integration_test.go)
+
+            Create rest_integration_test.go in the repo root with package gcpemulator_test.
+            This file tests the unified REST gateway over HTTP.
+
+            ### Dependencies
+            Uses setupEmulator() and startGateway() from testhelper_test.go (created in wave 1).
+
+            ### Imports needed
+            ```go
+            import (
+                "bytes"
+                "encoding/base64"
+                "encoding/json"
+                "fmt"
+                "io"
+                "net/http"
+                "strings"
+                "testing"
+            )
+            ```
+
+            ### Local helper — doREST
+            ```go
+            func doREST(t *testing.T, method, url string, body interface{}) (int, map[string]interface{}) {
+                t.Helper()
+                var reqBody io.Reader
+                if body != nil {
+                    b, err := json.Marshal(body)
+                    if err != nil { t.Fatalf("marshal: %v", err) }
+                    reqBody = bytes.NewReader(b)
+                }
+                req, err := http.NewRequest(method, url, reqBody)
+                if err != nil { t.Fatalf("new request: %v", err) }
+                if body != nil { req.Header.Set("Content-Type", "application/json") }
+                resp, err := http.DefaultClient.Do(req)
+                if err != nil { t.Fatalf("do request: %v", err) }
+                defer resp.Body.Close()
+                respBody, _ := io.ReadAll(resp.Body)
+                var result map[string]interface{}
+                _ = json.Unmarshal(respBody, &result) // may fail for empty body, ok
+                return resp.StatusCode, result
+            }
+            ```
+
+            ### Test functions
+
+            **TestREST_SecretManager** with subtests:
+            - Setup: _, grpcAddr, cleanup := setupEmulator(t); base := startGateway(t, grpcAddr)
+            - "CreateSecret": POST base+"/v1/projects/test-project/secrets?secretId=rest-secret"
+              body={"replication":{"automatic":{}}}. Expect 200, response["name"] contains "rest-secret"
+            - "GetSecret": GET base+"/v1/projects/test-project/secrets/rest-secret"
+              Expect 200, response["name"] contains "rest-secret"
+            - "ListSecrets": GET base+"/v1/projects/test-project/secrets"
+              Expect 200
+            - "AddVersion": POST base+"/v1/projects/test-project/secrets/rest-secret:addVersion"
+              body={"payload":{"data": base64.StdEncoding.EncodeToString([]byte("rest-secret-data"))}}
+              Expect 200, response["name"] contains "/versions/"
+            - "AccessVersion": GET base+"/v1/projects/test-project/secrets/rest-secret/versions/1:access"
+              Expect 200, decode response["payload"]["data"] from base64, verify = "rest-secret-data"
+
+            **TestREST_KMS** with subtests:
+            - Setup: _, grpcAddr, cleanup := setupEmulator(t); base := startGateway(t, grpcAddr)
+            - "CreateKeyRing": POST base+"/v1/projects/test-project/locations/us-central1/keyRings?keyRingId=rest-ring"
+              Expect 200
+            - "CreateCryptoKey": POST base+"/v1/projects/test-project/locations/us-central1/keyRings/rest-ring/cryptoKeys?cryptoKeyId=rest-key"
+              body={"purpose":"ENCRYPT_DECRYPT"}. Expect 200
+            - "Encrypt": POST base+"/v1/projects/test-project/locations/us-central1/keyRings/rest-ring/cryptoKeys/rest-key:encrypt"
+              body={"plaintext": base64.StdEncoding.EncodeToString([]byte("hello rest"))}
+              Expect 200, store response["ciphertext"]
+            - "Decrypt": POST .../rest-key:decrypt with body={"ciphertext": ciphertextFromEncrypt}
+              Expect 200, decode response["plaintext"] from base64, verify = "hello rest"
+
+            **TestREST_Eventarc** with subtests:
+            - Setup: _, grpcAddr, cleanup := setupEmulator(t); base := startGateway(t, grpcAddr)
+            - "CreateTrigger": POST base+"/v1/projects/test-project/locations/us-central1/triggers?triggerId=rest-trigger"
+              body={"eventFilters":[{"attribute":"type","value":"test.v1"}],"destination":{"httpEndpoint":{"uri":"http://localhost:8080/test"}}}
+              Expect 200
+            - "GetTrigger": GET base+"/v1/projects/test-project/locations/us-central1/triggers/rest-trigger"
+              Expect 200
+            - "ListTriggers": GET base+"/v1/projects/test-project/locations/us-central1/triggers"
+              Expect 200
+
+            **TestREST_NotFound** with subtests:
+            - "Secret": GET .../secrets/nonexistent, expect 404
+            - "KeyRing": GET .../locations/us-central1/keyRings/nonexistent, expect 404 or 500
+              (depending on gateway implementation; verify non-200)
+            - "Trigger": GET .../locations/us-central1/triggers/nonexistent, expect 404
+
+            **TestREST_InvalidArgument**:
+            - POST .../secrets with empty body or malformed JSON, expect 400
+
+            ### Verification gate
+            ```
+            go test -v -run "TestREST" -count=1 .
+            ```
+
+            ### Constraints
+            - Package: gcpemulator_test
+            - Do NOT use t.Parallel()
+            - Use t.Run subtests, t.Helper(), t.Cleanup()
+            - REST paths must match internal/gateway/gateway.go routing:
+              /keyRings or /cryptoKeys -> KMS, /locations/ -> Eventarc, else -> SM
+          files:
+            - rest_integration_test.go
+          dependencies:
+            - A
+        - id: C
+          task: |
+            ## Smoke and Health Tests (smoke_test.go)
+
+            Create smoke_test.go in the repo root with package gcpemulator_test.
+            This file covers health endpoints and cross-service smoke verification.
+
+            ### Dependencies
+            Uses setupEmulator(), dialEmulator(), startGateway() from testhelper_test.go (wave 1).
+
+            ### Imports needed
+            ```go
+            import (
+                "context"
+                "encoding/json"
+                "io"
+                "net/http"
+                "testing"
+
+                secretmanagerpb "cloud.google.com/go/secretmanager/apiv1/secretmanagerpb"
+                kmspb "cloud.google.com/go/kms/apiv1/kmspb"
+                eventarcpb "cloud.google.com/go/eventarc/apiv1/eventarcpb"
+                iampb "google.golang.org/genproto/googleapis/iam/v1"
+            )
+            ```
+
+            ### Test functions
+
+            **TestHealth_Healthz**:
+            - _, grpcAddr, cleanup := setupEmulator(t); base := startGateway(t, grpcAddr)
+            - resp, err := http.Get(base + "/healthz")
+            - Verify resp.StatusCode == 200
+            - Verify resp.Header.Get("Content-Type") == "application/json"
+            - Read body, verify exact JSON: {"status":"ok"}
+
+            **TestHealth_Readyz**:
+            - Same pattern as Healthz but for /readyz
+
+            **TestSmoke_AllServicesOnePort**:
+            - lis, _, cleanup := setupEmulator(t); conn := dialEmulator(t, lis)
+            - Create 4 clients from the same conn:
+              smClient := secretmanagerpb.NewSecretManagerServiceClient(conn)
+              kmsClient := kmspb.NewKeyManagementServiceClient(conn)
+              eaClient := eventarcpb.NewEventarcClient(conn)
+              iamClient := iampb.NewIAMPolicyClient(conn)
+            - ctx := context.Background()
+            - Call smClient.ListSecrets(ctx, &secretmanagerpb.ListSecretsRequest{Parent: "projects/test-project"})
+              Verify no error
+            - Call kmsClient.ListKeyRings(ctx, &kmspb.ListKeyRingsRequest{Parent: "projects/test-project/locations/us-central1"})
+              Verify no error
+            - Call eaClient.ListTriggers(ctx, &eventarcpb.ListTriggersRequest{Parent: "projects/test-project/locations/us-central1"})
+              Verify no error
+            - Call iamClient.GetIamPolicy(ctx, &iampb.GetIamPolicyRequest{Resource: "projects/test-project"})
+              Verify no error
+
+            **TestSmoke_GatewayRouting**:
+            - _, grpcAddr, cleanup := setupEmulator(t); base := startGateway(t, grpcAddr)
+            - GET base+"/v1/projects/test-project/secrets" -> expect 200 (SM route)
+            - GET base+"/v1/projects/test-project/locations/us-central1/keyRings" -> expect 200 (KMS route)
+            - GET base+"/v1/projects/test-project/locations/us-central1/triggers" -> expect 200 (Eventarc route)
+            - Verify all return HTTP 200
+
+            ### Verification gate
+            ```
+            go test -v -run "TestHealth|TestSmoke" -count=1 .
+            ```
+
+            ### Constraints
+            - Package: gcpemulator_test
+            - Do NOT use t.Parallel()
+            - Keep tests simple (smoke, not comprehensive CRUD)
+            - Health tests must verify exact JSON body {"status":"ok"}, not just status code
+            - Use t.Cleanup() for all cleanup
+          files:
+            - smoke_test.go
+          dependencies:
+            - A
+quality_gates:
+    level: standard
+    gates:
+        - type: build
+          command: go build ./...
+          required: true
+        - type: format
+          command: gofmt -l .
+          required: false
+        - type: lint
+          command: go vet ./...
+          required: true
+        - type: test
+          command: go test -count=1 ./...
+          required: true
+pre_mortem:
+    overall_risk: medium
+    rows:
+        - scenario: |
+            REST gateway requires a real TCP address to dial gRPC, but direct gRPC
+            tests use bufconn. The setupEmulator helper must provide both.
+          likelihood: high
+          impact: medium
+          mitigation: |
+            setupEmulator binds the gRPC server to both a bufconn listener (for
+            direct gRPC tests) and a real TCP listener on localhost:0 (for the REST
+            gateway). Both are returned. Agent A's prompt specifies this dual-listener
+            pattern explicitly.
+        - scenario: |
+            Proto import paths may be wrong. Using cloud.google.com/go/secretmanager
+            wrapper client vs raw proto stub secretmanagerpb.NewSecretManagerServiceClient.
+          likelihood: medium
+          impact: low
+          mitigation: |
+            Agent prompts specify exact import paths using raw gRPC proto stubs, not
+            the higher-level cloud.google.com/go client wrappers, since tests dial
+            via bufconn using raw grpc.ClientConn.
+        - scenario: |
+            Environment variable conflicts (IAM_MODE, IAM_EMULATOR_HOST) if tests
+            run in parallel with t.Parallel().
+          likelihood: medium
+          impact: medium
+          mitigation: |
+            All agent prompts explicitly say do NOT use t.Parallel(). setupEmulator
+            sets IAM_MODE=off as a safe default.
+        - scenario: |
+            REST gateway path routing depends on substring matching. Incorrect test
+            URLs route to wrong service, producing confusing failures.
+          likelihood: medium
+          impact: low
+          mitigation: |
+            Agent B prompt includes exact URL paths matching the routing logic in
+            internal/gateway/gateway.go: /keyRings or /cryptoKeys -> KMS,
+            /locations/ -> Eventarc, else -> SM.
+        - scenario: |
+            grpc.Server.Serve() can only be called once per listener. Trying to
+            serve on both bufconn and TCP with the same server may fail.
+          likelihood: medium
+          impact: high
+          mitigation: |
+            If grpc.Server cannot serve two listeners simultaneously, the fallback
+            is to skip bufconn entirely and use only a real TCP listener on
+            localhost:0 for both gRPC and REST tests. Agent A should try dual-serve
+            first, and fall back to TCP-only if it fails.
+state: "REVIEWED"
+injection_method: hook
