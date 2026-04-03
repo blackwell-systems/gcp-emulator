@@ -479,6 +479,28 @@ quality_gates:
         - type: test
           command: go test -count=1 ./...
           required: true
+completion_reports:
+    A:
+        status: complete
+        branch: saw/integration-tests/wave1-agent-A
+        commit: ebbccd0
+        files_changed:
+            - testhelper_test.go
+            - integration_test.go
+        files_created:
+            - testhelper_test.go
+            - integration_test.go
+        tests_added:
+            - TestGRPC_SecretManager
+            - TestGRPC_KMS
+            - TestGRPC_Eventarc
+            - TestGRPC_IAM
+            - TestGRPC_CrossService
+            - TestGRPC_NotFound
+            - TestGRPC_AlreadyExists
+            - TestGRPC_InvalidArgument
+        verification: PASS
+        notes: All 8 test functions (22 subtests) pass. Added tolerantLogger workaround for duplicate gRPC reflection.Register calls across emulator libraries - each library calls reflection.Register internally causing fatal on composition. This is a known upstream bug also affecting cmd/gcp-emulator/main.go.
 pre_mortem:
     overall_risk: medium
     rows:
@@ -528,5 +550,5 @@ pre_mortem:
             is to skip bufconn entirely and use only a real TCP listener on
             localhost:0 for both gRPC and REST tests. Agent A should try dual-serve
             first, and fall back to TCP-only if it fails.
-state: "REVIEWED"
+state: REVIEWED
 injection_method: hook

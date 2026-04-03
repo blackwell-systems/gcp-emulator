@@ -1,0 +1,10 @@
+{
+  "agent": "A",
+  "wave": 1,
+  "impl_doc": "/Users/dayna.blackwell/code/gcp-emulator/docs/IMPL/IMPL-integration-tests.yaml",
+  "owned_files": [
+    "testhelper_test.go",
+    "integration_test.go"
+  ],
+  "repo_root": "/Users/dayna.blackwell/code/gcp-emulator"
+}
