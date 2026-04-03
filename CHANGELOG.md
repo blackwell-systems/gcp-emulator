@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-04-03
+
 ### Added
 - 41 integration tests covering gRPC and REST for all 4 services (SM, KMS, Eventarc, IAM)
 - Smoke tests for `/healthz`, `/readyz`, and cross-service coexistence
@@ -35,3 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `policy.yaml.example` with role definitions for all included services
 - Makefile with `build`, `run`, `test`, `fmt`, `fmt-check`, `docker-build`, `clean`
 - Apache 2.0 license
+
+[Unreleased]: https://github.com/blackwell-systems/gcp-emulator/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/blackwell-systems/gcp-emulator/compare/v0.1.0...v0.2.0
+[0.1.0]: https://github.com/blackwell-systems/gcp-emulator/releases/tag/v0.1.0
