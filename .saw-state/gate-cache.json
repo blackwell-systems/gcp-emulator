@@ -1,0 +1,76 @@
+{
+  "entries": {
+    "108b564a5c13881021ac775984e071d8": {
+      "test": {
+        "gate_type": "test",
+        "command": "go test -count=1 ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "ok  \tgithub.com/blackwell-systems/gcp-emulator\t0.328s\n?   \tgithub.com/blackwell-systems/gcp-emulator/cmd/gcp-emulator\t[no test files]\n?   \tgithub.com/blackwell-systems/gcp-emulator/internal/gateway\t[no test files]\n",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:19:48.691748-07:00"
+      }
+    },
+    "42839c7b4cf6358897cf121df29c98f0": {
+      "build": {
+        "gate_type": "build",
+        "command": "go build ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:17:14.485368-07:00"
+      }
+    },
+    "4c7709d551dce85392ac90881bed6d1f": {
+      "build": {
+        "gate_type": "build",
+        "command": "go build ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:19:46.924162-07:00"
+      }
+    },
+    "7281f31c740696d50d147e5c3198e9a5": {
+      "test": {
+        "gate_type": "test",
+        "command": "go test -count=1 ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "ok  \tgithub.com/blackwell-systems/gcp-emulator\t0.302s\n?   \tgithub.com/blackwell-systems/gcp-emulator/cmd/gcp-emulator\t[no test files]\n?   \tgithub.com/blackwell-systems/gcp-emulator/internal/gateway\t[no test files]\n",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:17:16.088344-07:00"
+      }
+    },
+    "8b81205ba9a202dd937a17f70f6dcc62": {
+      "lint": {
+        "gate_type": "lint",
+        "command": "go vet ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:17:15.02385-07:00"
+      }
+    },
+    "d3a87e19f2fed095f55b8264deec153c": {
+      "lint": {
+        "gate_type": "lint",
+        "command": "go vet ./...",
+        "passed": true,
+        "exit_code": 0,
+        "stdout": "",
+        "stderr": "",
+        "from_cache": true,
+        "cached_at": "2026-04-03T00:19:47.537325-07:00"
+      }
+    }
+  }
+}
