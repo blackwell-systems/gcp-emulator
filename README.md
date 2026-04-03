@@ -153,6 +153,20 @@ gcp-emulator (single process)
     └── /healthz, /readyz
 ```
 
+## Migrating from gcp-iam-control-plane
+
+If you were using the now-archived [`gcp-iam-control-plane`](https://github.com/blackwell-systems/gcp-iam-control-plane) CLI, this repo is its replacement. The old CLI orchestrated separate emulators via docker-compose; this one runs everything in a single process.
+
+```bash
+# Old
+go install github.com/blackwell-systems/gcp-iam-control-plane/cmd/gcp-emulator@latest
+
+# New
+go install github.com/blackwell-systems/gcp-emulator/cmd/gcp-emulator@latest
+```
+
+The `--policy`, `--iam-mode`, `--trace`, and `--watch` flags are all preserved. No changes to `policy.yaml` format required.
+
 ## License
 
 Apache 2.0 — see [LICENSE](LICENSE).
