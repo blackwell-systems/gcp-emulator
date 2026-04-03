@@ -2,18 +2,11 @@ module github.com/blackwell-systems/gcp-emulator
 
 go 1.24.0
 
-replace (
-	github.com/blackwell-systems/gcp-eventarc-emulator => ../gcp-eventarc-emulator
-	github.com/blackwell-systems/gcp-iam-emulator => ../gcp-iam-emulator
-	github.com/blackwell-systems/gcp-kms-emulator => ../gcp-kms-emulator
-	github.com/blackwell-systems/gcp-secret-manager-emulator => ../gcp-secret-manager-emulator
-)
-
 require (
-	github.com/blackwell-systems/gcp-eventarc-emulator v0.0.0-00010101000000-000000000000
-	github.com/blackwell-systems/gcp-iam-emulator v0.0.0-00010101000000-000000000000
-	github.com/blackwell-systems/gcp-kms-emulator v0.0.0-00010101000000-000000000000
-	github.com/blackwell-systems/gcp-secret-manager-emulator v0.0.0-00010101000000-000000000000
+	github.com/blackwell-systems/gcp-eventarc-emulator v0.1.1
+	github.com/blackwell-systems/gcp-iam-emulator v0.9.0
+	github.com/blackwell-systems/gcp-kms-emulator v0.4.0
+	github.com/blackwell-systems/gcp-secret-manager-emulator v1.5.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/grpc v1.80.0
