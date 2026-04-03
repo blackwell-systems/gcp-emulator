@@ -4,7 +4,7 @@
 # In CI, the release workflow checks out all sibling repos and sets
 # the build context to the parent directory automatically.
 
-FROM golang:1.24-alpine AS builder
+FROM golang:1.25-alpine AS builder
 
 WORKDIR /build/gcp-emulator
 
