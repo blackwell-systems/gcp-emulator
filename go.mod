@@ -2,14 +2,6 @@ module github.com/blackwell-systems/gcp-emulator
 
 go 1.25.0
 
-// Local replace directives for development. Remove and bump versions before release.
-replace (
-	github.com/blackwell-systems/gcp-eventarc-emulator => ../gcp-eventarc-emulator
-	github.com/blackwell-systems/gcp-iam-emulator => ../gcp-iam-emulator
-	github.com/blackwell-systems/gcp-kms-emulator => ../gcp-kms-emulator
-	github.com/blackwell-systems/gcp-secret-manager-emulator => ../gcp-secret-manager-emulator
-)
-
 require (
 	cloud.google.com/go/eventarc v1.18.0
 	cloud.google.com/go/kms v1.27.0
@@ -17,8 +9,8 @@ require (
 	cloud.google.com/go/secretmanager v1.16.0
 	github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2
 	github.com/blackwell-systems/gcp-iam-emulator v0.9.1
-	github.com/blackwell-systems/gcp-kms-emulator v0.4.1
-	github.com/blackwell-systems/gcp-secret-manager-emulator v1.5.1
+	github.com/blackwell-systems/gcp-kms-emulator v0.5.0
+	github.com/blackwell-systems/gcp-secret-manager-emulator v1.6.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7

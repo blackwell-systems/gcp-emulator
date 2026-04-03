@@ -22,6 +22,14 @@ github.com/antlr4-go/antlr/v4 v4.13.1 h1:SqQKkuVZ+zWkMMNkjy5FZe5mr5WURWnlpmOuzYW
 github.com/antlr4-go/antlr/v4 v4.13.1/go.mod h1:GKmUxMtwp6ZgGwZSva4eWPC5mS6vUAmOABFgjdkM7Nw=
 github.com/blackwell-systems/gcp-emulator-auth v0.3.0 h1:R2nwBN+FVDFiUgHJSpcY/NK6tfNIJs7rO4bbBFK4xes=
 github.com/blackwell-systems/gcp-emulator-auth v0.3.0/go.mod h1:QB/g2GrtdByaU0+/mjdKwVKnB/Zoth2Op43Qo11Mx5s=
+github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2 h1:PwSWgNT5LsNMpKCOagIP0U5p3EVODxtR56hBNzBx85k=
+github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2/go.mod h1:cKwO4lPU61ninmu5BxBWLECdlGFXu/Uis7/bu+VqZjc=
+github.com/blackwell-systems/gcp-iam-emulator v0.9.1 h1:27ydA438PGeR53Gom/eW3E9gcWfhTTOeFK+xXs2FMzs=
+github.com/blackwell-systems/gcp-iam-emulator v0.9.1/go.mod h1:AQvFz+YP7Q/yOPwN/+5jcDqvhA1vA3rp4GHK0JcGGPY=
+github.com/blackwell-systems/gcp-kms-emulator v0.5.0 h1:Mzgz4zeeAG3syZR814dgHfs6MosIuM56qqZxCGE9SNc=
+github.com/blackwell-systems/gcp-kms-emulator v0.5.0/go.mod h1:dwaxLfXwROn3+q4f0N0YqnlPSkpq0anzz1gJY5ws0WE=
+github.com/blackwell-systems/gcp-secret-manager-emulator v1.6.0 h1:W0Tpve6YhJWfreqQ/0P/0pxWZ/i5SYA/7XVCG5Xu5xE=
+github.com/blackwell-systems/gcp-secret-manager-emulator v1.6.0/go.mod h1:w5yjggzp5V3d5aUVW9UQ/0bUHd22iVfswSuy/QFpllk=
 github.com/cespare/xxhash/v2 v2.3.0 h1:UL815xU9SqsFlibzuggzjXhog7bL6oX9BbNZnL2UFvs=
 github.com/cespare/xxhash/v2 v2.3.0/go.mod h1:VGX0DQ3Q6kWi7AoAeZDth3/j3BFtOZR5XLFGgcrjCOs=
 github.com/cloudevents/sdk-go/v2 v2.15.2 h1:54+I5xQEnI73RBhWHxbI1XJcqOFOVJN85vb41+8mHUc=
