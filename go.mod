@@ -1,10 +1,18 @@
 module github.com/blackwell-systems/gcp-emulator
 
-go 1.24.0
+go 1.25.0
+
+// Local replace directives for development. Remove and bump versions before release.
+replace (
+	github.com/blackwell-systems/gcp-eventarc-emulator => ../gcp-eventarc-emulator
+	github.com/blackwell-systems/gcp-iam-emulator => ../gcp-iam-emulator
+	github.com/blackwell-systems/gcp-kms-emulator => ../gcp-kms-emulator
+	github.com/blackwell-systems/gcp-secret-manager-emulator => ../gcp-secret-manager-emulator
+)
 
 require (
 	cloud.google.com/go/eventarc v1.18.0
-	cloud.google.com/go/kms v1.25.0
+	cloud.google.com/go/kms v1.27.0
 	cloud.google.com/go/longrunning v0.8.0
 	cloud.google.com/go/secretmanager v1.16.0
 	github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2
@@ -13,13 +21,13 @@ require (
 	github.com/blackwell-systems/gcp-secret-manager-emulator v1.5.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/spf13/cobra v1.10.2
-	google.golang.org/genproto v0.0.0-20260126211449-d11affda4bed
+	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
 	google.golang.org/grpc v1.80.0
 )
 
 require (
 	cel.dev/expr v0.25.1 // indirect
-	cloud.google.com/go/iam v1.5.3 // indirect
+	cloud.google.com/go/iam v1.6.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/blackwell-systems/gcp-emulator-auth v0.3.0 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.15.2 // indirect
@@ -36,11 +44,11 @@ require (
 	go.uber.org/multierr v1.1.0 // indirect
 	go.uber.org/zap v1.10.0 // indirect
 	golang.org/x/exp v0.0.0-20240823005443-9b4947da3948 // indirect
-	golang.org/x/net v0.49.0 // indirect
-	golang.org/x/sys v0.40.0 // indirect
-	golang.org/x/text v0.34.0 // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260209200024-4cfbd4190f57 // indirect
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57 // indirect
+	golang.org/x/net v0.52.0 // indirect
+	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/text v0.35.0 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260401001100-f93e5f3e9f0f // indirect
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260319201613-d00831a3d3e7 // indirect
 	google.golang.org/protobuf v1.36.11 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

@@ -268,12 +268,17 @@ func TestREST_InvalidArgument(t *testing.T) {
 	t.Cleanup(cleanup)
 	base := startGateway(t, grpcAddr)
 
-	// POST to create a secret with empty/malformed body should return 400.
-	status, _ := doREST(t, http.MethodPost,
+	// POST with malformed JSON body should return 400.
+	req, _ := http.NewRequest(http.MethodPost,
 		fmt.Sprintf("%s/v1/projects/test-project/secrets?secretId=bad-secret", base),
-		nil,
-	)
-	if status != http.StatusBadRequest {
-		t.Fatalf("expected 400 for empty body, got %d", status)
+		strings.NewReader("{not valid json}"))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Fatalf("request failed: %v", err)
+	}
+	resp.Body.Close()
+	if resp.StatusCode != http.StatusBadRequest {
+		t.Fatalf("expected 400 for malformed JSON, got %d", resp.StatusCode)
 	}
 }
