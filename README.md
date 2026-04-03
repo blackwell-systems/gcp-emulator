@@ -5,7 +5,7 @@
 [![Go Version](https://img.shields.io/badge/go-1.24+-blue.svg)](https://go.dev/)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-> **Unified local emulator for Google Cloud Platform** — Secret Manager, Eventarc, and IAM enforcement in a single process.
+> **Unified local emulator for Google Cloud Platform** — Secret Manager, KMS, Eventarc, and IAM enforcement in a single process.
 
 Run your entire GCP stack locally with one command. No credentials, no network, no docker-compose juggling.
 
@@ -46,6 +46,7 @@ All services share a single gRPC port. A unified REST gateway handles HTTP trans
 | Service | gRPC (`:9090`) | REST (`:8090`) |
 |---|---|---|
 | Secret Manager | `google.cloud.secretmanager.v1.SecretManagerService` | `/v1/projects/{p}/secrets/...` |
+| KMS | `google.cloud.kms.v1.KeyManagementService` | `/v1/projects/{p}/locations/.../keyRings/...` |
 | Eventarc | `google.cloud.eventarc.v1.Eventarc` | `/v1/projects/{p}/locations/...` |
 | Eventarc Publisher | `google.cloud.eventarc.publishing.v1.Publisher` | `/v1/projects/{p}/locations/...` |
 | Long-running Ops | `google.longrunning.Operations` | — |
@@ -128,6 +129,7 @@ Need just one service? Use the standalone emulators:
 | Service | Repository |
 |---|---|
 | Secret Manager | [`gcp-secret-manager-emulator`](https://github.com/blackwell-systems/gcp-secret-manager-emulator) |
+| KMS | [`gcp-kms-emulator`](https://github.com/blackwell-systems/gcp-kms-emulator) |
 | Eventarc | [`gcp-eventarc-emulator`](https://github.com/blackwell-systems/gcp-eventarc-emulator) |
 | IAM | [`gcp-iam-emulator`](https://github.com/blackwell-systems/gcp-iam-emulator) |
 
@@ -137,15 +139,17 @@ Need just one service? Use the standalone emulators:
 gcp-emulator (single process)
 │
 ├── gRPC :9090
-│   ├── SecretManagerService   ← gcp-secret-manager-emulator
-│   ├── Eventarc               ← gcp-eventarc-emulator
-│   ├── Publisher              ← gcp-eventarc-emulator
-│   ├── Operations             ← gcp-eventarc-emulator
-│   └── IAMPolicy              ← gcp-iam-emulator
+│   ├── SecretManagerService      ← gcp-secret-manager-emulator
+│   ├── KeyManagementService      ← gcp-kms-emulator
+│   ├── Eventarc                  ← gcp-eventarc-emulator
+│   ├── Publisher                 ← gcp-eventarc-emulator
+│   ├── Operations                ← gcp-eventarc-emulator
+│   └── IAMPolicy                 ← gcp-iam-emulator
 │
 └── REST :8090
-    ├── /v1/projects/*/secrets/*     → Secret Manager
-    ├── /v1/projects/*/locations/*   → Eventarc
+    ├── /v1/projects/*/secrets/*          → Secret Manager
+    ├── /v1/projects/*/locations/*/keyRings/* → KMS
+    ├── /v1/projects/*/locations/*         → Eventarc
     └── /healthz, /readyz
 ```
 

@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Unified gRPC server (`:9090`) serving Secret Manager, Eventarc, and IAM in one process
+- Unified gRPC server (`:9090`) serving Secret Manager, KMS, Eventarc, and IAM in one process
 - Unified REST gateway (`:8090`) routing by URL path structure (`/locations/` → Eventarc, otherwise → Secret Manager)
 - IAM enforcement via `--policy` and `--iam-mode` flags (off / permissive / strict)
 - Hot-reload of policy file with `--watch`

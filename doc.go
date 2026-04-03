@@ -2,7 +2,7 @@
 //
 // # Overview
 //
-// gcp-emulator runs Secret Manager, Eventarc, and IAM enforcement in a single
+// gcp-emulator runs Secret Manager, KMS, Eventarc, and IAM enforcement in a single
 // process. All services share a gRPC port (default :9090); a unified REST gateway
 // (default :8090) transcodes HTTP/JSON to gRPC.
 //
@@ -24,6 +24,7 @@
 // # Service Endpoints (gRPC :9090)
 //
 //	google.cloud.secretmanager.v1.SecretManagerService
+//	google.cloud.kms.v1.KeyManagementService
 //	google.cloud.eventarc.v1.Eventarc
 //	google.cloud.eventarc.publishing.v1.Publisher
 //	google.longrunning.Operations
@@ -31,8 +32,9 @@
 //
 // # REST Gateway (:8090)
 //
-//	/v1/projects/{project}/secrets/*          → Secret Manager
-//	/v1/projects/{project}/locations/*        → Eventarc
+//	/v1/projects/{project}/secrets/*              → Secret Manager
+//	/v1/projects/{project}/locations/*/keyRings/* → KMS
+//	/v1/projects/{project}/locations/*            → Eventarc
 //	/healthz, /readyz                         → health endpoints
 //
 // # Environment Variables
@@ -48,6 +50,7 @@
 // Each service is also available as a standalone emulator:
 //
 //	github.com/blackwell-systems/gcp-secret-manager-emulator
+//	github.com/blackwell-systems/gcp-kms-emulator
 //	github.com/blackwell-systems/gcp-eventarc-emulator
 //	github.com/blackwell-systems/gcp-iam-emulator
 package gcpemulator

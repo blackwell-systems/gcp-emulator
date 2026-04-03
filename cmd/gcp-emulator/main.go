@@ -58,8 +58,8 @@ func rootCmd() *cobra.Command {
 
 	cmd := &cobra.Command{
 		Use:   "gcp-emulator",
-		Short: "Unified GCP local emulator (Secret Manager, Eventarc, IAM)",
-		Long: `gcp-emulator runs Secret Manager, Eventarc, and IAM enforcement
+		Short: "Unified GCP local emulator (Secret Manager, KMS, Eventarc, IAM)",
+		Long: `gcp-emulator runs Secret Manager, KMS, Eventarc, and IAM enforcement
 in a single process. All services share a gRPC port; a unified
 REST gateway transcodes HTTP/JSON to gRPC.`,
 		Version: version,
@@ -125,7 +125,7 @@ func run(grpcPort, httpPort int, policyFile, iamMode string, trace, watch bool) 
 		return fmt.Errorf("grpc listen: %w", err)
 	}
 	go func() {
-		log.Printf("gRPC listening on :%d (Secret Manager, Eventarc, IAM)", grpcPort)
+		log.Printf("gRPC listening on :%d (Secret Manager, KMS, Eventarc, IAM)", grpcPort)
 		if err := grpcSrv.Serve(lis); err != nil {
 			log.Printf("gRPC server stopped: %v", err)
 		}
