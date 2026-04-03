@@ -2,9 +2,11 @@
 //
 // It routes incoming REST requests to the appropriate service handler
 // based on URL path structure:
-//   - /v1/projects/{p}/locations/... → Eventarc (grpc-gateway v2)
-//   - /v1/projects/{p}/secrets/...   → Secret Manager (hand-rolled)
-//   - /healthz, /readyz              → health endpoints
+//   - /v1/{resource}:setIamPolicy etc → IAM (grpc-gateway v2)
+//   - /v1/projects/{p}/locations/...  → Eventarc (grpc-gateway v2)
+//   - /v1/projects/{p}/.../keyRings   → KMS (grpc-gateway v2)
+//   - /v1/projects/{p}/secrets/...    → Secret Manager (grpc-gateway v2)
+//   - /healthz, /readyz               → health endpoints
 package gateway
 
 import (
@@ -13,6 +15,7 @@ import (
 	"strings"
 
 	eventarc "github.com/blackwell-systems/gcp-eventarc-emulator"
+	iam "github.com/blackwell-systems/gcp-iam-emulator"
 	kms "github.com/blackwell-systems/gcp-kms-emulator"
 	sm "github.com/blackwell-systems/gcp-secret-manager-emulator"
 )
@@ -22,6 +25,7 @@ type Gateway struct {
 	smHandler       http.Handler
 	eventarcHandler http.Handler
 	kmsHandler      http.Handler
+	iamHandler      http.Handler
 }
 
 // New creates a unified HTTP gateway that proxies REST requests to all
@@ -42,10 +46,16 @@ func New(grpcAddr string) (*Gateway, error) {
 		return nil, fmt.Errorf("gateway: kms: %w", err)
 	}
 
+	iamH, err := iam.NewGatewayHandler(grpcAddr)
+	if err != nil {
+		return nil, fmt.Errorf("gateway: iam: %w", err)
+	}
+
 	return &Gateway{
 		smHandler:       smH,
 		eventarcHandler: eaH,
 		kmsHandler:      kmsH,
+		iamHandler:      iamH,
 	}, nil
 }
 
@@ -76,6 +86,14 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// Secret Manager resources never do.
 	if strings.Contains(path, "/locations/") {
 		g.eventarcHandler.ServeHTTP(w, r)
+		return
+	}
+
+	// IAM policy methods: /v1/{resource}:setIamPolicy, :getIamPolicy, :testIamPermissions
+	if strings.HasSuffix(path, ":setIamPolicy") ||
+		strings.HasSuffix(path, ":getIamPolicy") ||
+		strings.HasSuffix(path, ":testIamPermissions") {
+		g.iamHandler.ServeHTTP(w, r)
 		return
 	}
 

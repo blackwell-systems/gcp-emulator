@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/longrunning v0.8.0
 	cloud.google.com/go/secretmanager v1.16.0
 	github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2
-	github.com/blackwell-systems/gcp-iam-emulator v0.9.1
+	github.com/blackwell-systems/gcp-iam-emulator v0.10.0
 	github.com/blackwell-systems/gcp-kms-emulator v0.5.0
 	github.com/blackwell-systems/gcp-secret-manager-emulator v1.6.0
 	github.com/fsnotify/fsnotify v1.9.0
@@ -19,7 +19,7 @@ require (
 
 require (
 	cel.dev/expr v0.25.1 // indirect
-	cloud.google.com/go/iam v1.6.0 // indirect
+	cloud.google.com/go/iam v1.7.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/blackwell-systems/gcp-emulator-auth v0.3.0 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.15.2 // indirect
@@ -30,7 +30,6 @@ require (
 	github.com/json-iterator/go v1.1.10 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180228061459-e0a39a4cb421 // indirect
 	github.com/modern-go/reflect2 v0.0.0-20180701023420-4b7aa43c6742 // indirect
-	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	github.com/spf13/pflag v1.0.9 // indirect
 	go.uber.org/atomic v1.4.0 // indirect
 	go.uber.org/multierr v1.1.0 // indirect

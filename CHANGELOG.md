@@ -11,10 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - 41 integration tests covering gRPC and REST for all 4 services (SM, KMS, Eventarc, IAM)
 - Smoke tests for `/healthz`, `/readyz`, and cross-service coexistence
 - REST integration tests verifying HTTP status codes and response format
+- IAM REST gateway routing in unified gateway (`:setIamPolicy`, `:getIamPolicy`, `:testIamPermissions`)
+
+### Changed
+- All 4 service REST gateways now use grpc-gateway v2 (IAM migrated from hand-rolled HTTP)
+- Bumped gcp-iam-emulator to v0.10.0
 
 ### Fixed
 - Duplicate `reflection.Register` crash when composing all emulators on one gRPC server
-- REST gateway now uses grpc-gateway v2 from upstream SM and KMS emulators (correct HTTP status codes, GCP error format, malformed JSON rejection)
+- REST gateway now uses grpc-gateway v2 from upstream SM, KMS, and IAM emulators (correct HTTP status codes, GCP error format, malformed JSON rejection)
 
 ## [0.1.0] - 2026-04-02
 
