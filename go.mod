@@ -5,12 +5,14 @@ go 1.24.0
 replace (
 	github.com/blackwell-systems/gcp-eventarc-emulator => ../gcp-eventarc-emulator
 	github.com/blackwell-systems/gcp-iam-emulator => ../gcp-iam-emulator
+	github.com/blackwell-systems/gcp-kms-emulator => ../gcp-kms-emulator
 	github.com/blackwell-systems/gcp-secret-manager-emulator => ../gcp-secret-manager-emulator
 )
 
 require (
 	github.com/blackwell-systems/gcp-eventarc-emulator v0.0.0-00010101000000-000000000000
 	github.com/blackwell-systems/gcp-iam-emulator v0.0.0-00010101000000-000000000000
+	github.com/blackwell-systems/gcp-kms-emulator v0.0.0-00010101000000-000000000000
 	github.com/blackwell-systems/gcp-secret-manager-emulator v0.0.0-00010101000000-000000000000
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/spf13/cobra v1.10.2
@@ -21,6 +23,7 @@ require (
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go/eventarc v1.18.0 // indirect
 	cloud.google.com/go/iam v1.5.3 // indirect
+	cloud.google.com/go/kms v1.25.0 // indirect
 	cloud.google.com/go/longrunning v0.8.0 // indirect
 	cloud.google.com/go/secretmanager v1.16.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect

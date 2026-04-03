@@ -12,6 +12,8 @@ cloud.google.com/go/eventarc v1.18.0 h1:8WWG1/ogInYur1NQjML6EMHQ0ZBzAdMDGlUVpLD5
 cloud.google.com/go/eventarc v1.18.0/go.mod h1:/6SDoqh5+9QNUqCX4/oQcJVK16fG/snHBSXu7lrJtO8=
 cloud.google.com/go/iam v1.5.3 h1:+vMINPiDF2ognBJ97ABAYYwRgsaqxPbQDlMnbHMjolc=
 cloud.google.com/go/iam v1.5.3/go.mod h1:MR3v9oLkZCTlaqljW6Eb2d3HGDGK5/bDv93jhfISFvU=
+cloud.google.com/go/kms v1.25.0 h1:gVqvGGUmz0nYCmtoxWmdc1wli2L1apgP8U4fghPGSbQ=
+cloud.google.com/go/kms v1.25.0/go.mod h1:XIdHkzfj0bUO3E+LvwPg+oc7s58/Ns8Nd8Sdtljihbk=
 cloud.google.com/go/longrunning v0.8.0 h1:LiKK77J3bx5gDLi4SMViHixjD2ohlkwBi+mKA7EhfW8=
 cloud.google.com/go/longrunning v0.8.0/go.mod h1:UmErU2Onzi+fKDg2gR7dusz11Pe26aknR4kHmJJqIfk=
 cloud.google.com/go/secretmanager v1.16.0 h1:19QT7ZsLJ8FSP1k+4esQvuCD7npMJml6hYzilxVyT+k=

@@ -13,13 +13,15 @@ import (
 	"strings"
 
 	eventarc "github.com/blackwell-systems/gcp-eventarc-emulator"
+	kms "github.com/blackwell-systems/gcp-kms-emulator"
 	sm "github.com/blackwell-systems/gcp-secret-manager-emulator"
 )
 
 // Gateway is the unified HTTP gateway for all gcp-emulator services.
 type Gateway struct {
-	smHandler      http.Handler
+	smHandler       http.Handler
 	eventarcHandler http.Handler
+	kmsHandler      http.Handler
 }
 
 // New creates a unified HTTP gateway that proxies REST requests to all
@@ -35,16 +37,23 @@ func New(grpcAddr string) (*Gateway, error) {
 		return nil, fmt.Errorf("gateway: eventarc: %w", err)
 	}
 
+	kmsH, err := kms.NewGatewayHandler(grpcAddr)
+	if err != nil {
+		return nil, fmt.Errorf("gateway: kms: %w", err)
+	}
+
 	return &Gateway{
 		smHandler:       smH,
 		eventarcHandler: eaH,
+		kmsHandler:      kmsH,
 	}, nil
 }
 
 // ServeHTTP implements http.Handler. Routes by path:
-//   - /healthz, /readyz → health check
-//   - paths with /locations/ → Eventarc
-//   - all others → Secret Manager
+//   - /healthz, /readyz            → health check
+//   - paths with /keyRings or /cryptoKeys → KMS
+//   - paths with /locations/       → Eventarc
+//   - all others                   → Secret Manager
 func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	path := r.URL.Path
 
@@ -53,6 +62,13 @@ func (g *Gateway) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte(`{"status":"ok"}`))
+		return
+	}
+
+	// KMS resources: .../locations/{loc}/keyRings/...
+	// Check before the generic /locations/ check since KMS also uses locations.
+	if strings.Contains(path, "/keyRings") || strings.Contains(path, "/cryptoKeys") {
+		g.kmsHandler.ServeHTTP(w, r)
 		return
 	}
 

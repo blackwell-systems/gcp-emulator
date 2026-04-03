@@ -32,6 +32,7 @@ import (
 
 	eventarc "github.com/blackwell-systems/gcp-eventarc-emulator"
 	iam "github.com/blackwell-systems/gcp-iam-emulator"
+	kms "github.com/blackwell-systems/gcp-kms-emulator"
 	sm "github.com/blackwell-systems/gcp-secret-manager-emulator"
 
 	"github.com/blackwell-systems/gcp-emulator/internal/gateway"
@@ -108,7 +109,12 @@ func run(grpcPort, httpPort int, policyFile, iamMode string, trace, watch bool) 
 		return fmt.Errorf("secret manager: %w", err)
 	}
 
-	// 4. Register Eventarc (Eventarc + Publisher + Operations).
+	// 4. Register KMS.
+	if err := kms.Register(grpcSrv); err != nil {
+		return fmt.Errorf("kms: %w", err)
+	}
+
+	// 5. Register Eventarc (Eventarc + Publisher + Operations).
 	if err := eventarc.Register(grpcSrv); err != nil {
 		return fmt.Errorf("eventarc: %w", err)
 	}
