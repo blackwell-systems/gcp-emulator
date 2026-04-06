@@ -20,10 +20,10 @@ jobs:
 
       - name: Checkout sibling repos
         run: |
-          git clone https://github.com/blackwell-systems/gcp-iam-emulator
-          git clone https://github.com/blackwell-systems/gcp-kms-emulator
-          git clone https://github.com/blackwell-systems/gcp-secret-manager-emulator
-          git clone https://github.com/blackwell-systems/gcp-eventarc-emulator
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/blackwell-systems/gcp-iam-emulator
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/blackwell-systems/gcp-kms-emulator
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/blackwell-systems/gcp-secret-manager-emulator
+          git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/blackwell-systems/gcp-eventarc-emulator
 
       - uses: docker/setup-buildx-action@v3
 

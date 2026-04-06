@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.2] - 2026-04-05
+
+### Changed
+
+- Bumped all emulator dependencies to latest:
+  - gcp-eventarc-emulator v0.1.2 → v0.2.3
+  - gcp-kms-emulator v0.5.0 → v0.8.1
+  - gcp-secret-manager-emulator v1.6.0 → v1.7.1
+  - gcp-iam-emulator v0.10.0 → v0.10.1
+  - gcp-emulator-auth v0.3.0 → v0.4.1
+
+### Fixed
+
+- Added missing `gcp-kms-emulator` to Dockerfile `COPY` steps
+- Fixed release workflow to authenticate sibling repo clones with `GITHUB_TOKEN`
+- Added `go work init` in Dockerfile to use local module sources (avoids private repo auth in Docker build)
+
 ## [0.2.1] - 2026-04-03
 
 ### Added

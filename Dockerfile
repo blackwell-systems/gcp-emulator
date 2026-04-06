@@ -10,9 +10,17 @@ WORKDIR /build/gcp-emulator
 
 # Copy all module sources (paths relative to parent-dir build context)
 COPY gcp-iam-emulator/             /build/gcp-iam-emulator/
+COPY gcp-kms-emulator/             /build/gcp-kms-emulator/
 COPY gcp-secret-manager-emulator/  /build/gcp-secret-manager-emulator/
 COPY gcp-eventarc-emulator/        /build/gcp-eventarc-emulator/
 COPY gcp-emulator/                 /build/gcp-emulator/
+
+# Create go.work to use local copies of sibling modules (avoids private repo auth)
+RUN go work init . \
+    ../gcp-iam-emulator \
+    ../gcp-kms-emulator \
+    ../gcp-secret-manager-emulator \
+    ../gcp-eventarc-emulator
 
 RUN go mod download && \
     CGO_ENABLED=0 GOOS=linux go build -o gcp-emulator ./cmd/gcp-emulator
