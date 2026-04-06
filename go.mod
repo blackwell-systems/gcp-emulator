@@ -7,10 +7,10 @@ require (
 	cloud.google.com/go/kms v1.27.0
 	cloud.google.com/go/longrunning v0.8.0
 	cloud.google.com/go/secretmanager v1.16.0
-	github.com/blackwell-systems/gcp-eventarc-emulator v0.1.2
-	github.com/blackwell-systems/gcp-iam-emulator v0.10.0
-	github.com/blackwell-systems/gcp-kms-emulator v0.5.0
-	github.com/blackwell-systems/gcp-secret-manager-emulator v1.6.0
+	github.com/blackwell-systems/gcp-eventarc-emulator v0.2.3
+	github.com/blackwell-systems/gcp-iam-emulator v0.10.1
+	github.com/blackwell-systems/gcp-kms-emulator v0.8.1
+	github.com/blackwell-systems/gcp-secret-manager-emulator v1.7.1
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/spf13/cobra v1.10.2
 	google.golang.org/genproto v0.0.0-20260319201613-d00831a3d3e7
@@ -21,7 +21,7 @@ require (
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go/iam v1.7.0 // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
-	github.com/blackwell-systems/gcp-emulator-auth v0.3.0 // indirect
+	github.com/blackwell-systems/gcp-emulator-auth v0.4.1 // indirect
 	github.com/cloudevents/sdk-go/v2 v2.15.2 // indirect
 	github.com/google/cel-go v0.27.0 // indirect
 	github.com/google/uuid v1.6.0 // indirect
